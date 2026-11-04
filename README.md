@@ -1,40 +1,47 @@
-# LegalPro - Frontend Dashboard (Next.js 14)
+# LegalPro - Backend API (Laravel 11)
 
-**LegalPro Frontend** is a modern, enterprise-grade, and highly responsive user interface built with **Next.js 14** and **TypeScript**. It seamlessly consumes the Laravel backend API to deliver a fast, intuitive, and feature-rich experience for lawyers, staff, and clients.
+**LegalPro** is an enterprise-grade Legal Case Management SaaS backend built with **Laravel 11**. It provides a robust, secure, and scalable RESTful API that powers the Next.js frontend, handling complex legal workflows, AI integrations, automated billing, and real-time notifications.
 
-## 🌟 Key Frontend Features
+## 🌟 Key Backend Features
 
-### 📱 1. Mobile-First Responsive Design
-- **Collapsible Sidebar:** Smooth, animated hamburger menu for mobile and tablet devices.
-- **Responsive Data Tables:** Horizontal scrolling and card-view adaptations for small screens.
-- **Touch-Friendly UI:** Optimized button sizes, full-screen modals, and accessible form inputs for mobile users.
+### 🤖 1. AI Document Summarizer
+- Integrates with **OpenAI API** to process lengthy legal documents.
+- Generates concise summaries highlighting key parties, dates, legal issues, and next actions.
+- Supports dynamic language processing (English/Nepali).
 
-### ⚡ 2. Premium UI/UX Polish
-- **Loading Skeletons:** Replaces basic spinners with structural placeholders for a faster perceived load time.
-- **Smooth Transitions:** Page and modal animations powered by `framer-motion`.
-- **Beautiful Empty States:** Informative, illustrated fallback screens when no data is available.
-- **Toast Notifications:** Instant, non-intrusive feedback for success, error, and warning states using `react-hot-toast`.
+### 📄 2. Dynamic Document Templates (Auto-Fill)
+- Stores legal templates (e.g., Vakalatnama, Legal Notice) with `{{variable}}` placeholders.
+- Automatically extracts variables using Regex and auto-fills them with real-time **Client** and **Case** data.
+- Supports instant PDF generation via `barryvdh/laravel-dompdf`.
 
-### ⚙️ 3. Dynamic Global State & Branding
-- **Zustand State Management:** Lightweight, global state for Authentication (`useAuthStore`) and System Settings (`useSettingStore`).
-- **Dynamic Branding:** Automatically fetches and displays the System Name and Logo from the backend on the Login Page and Sidebar without requiring authentication.
+### ⏰ 3. Automated Cron Jobs (Daily Reminders)
+- **Hearing Reminders:** Automatically emails clients and assigned lawyers about hearings scheduled for *tomorrow*.
+- **Invoice Reminders:** Automatically emails clients with *overdue invoices* (past due date, unpaid/partial status).
+- Managed seamlessly via Laravel Task Scheduling (`routes/console.php`).
 
-### 🔔 4. Real-Time Notification Center
-- Interactive dropdown in the Header showing unread counts with a pulsing red badge.
-- One-click "Mark all as read" functionality.
-- Clicking a notification automatically marks it as read via API and navigates to the relevant page.
+### 🛡️ 4. Automated Daily Backups
+- Powered by `spatie/laravel-backup`.
+- Automatically backs up the Database and uploaded files (`storage/app/public`) daily.
+- Includes smart cleanup strategies (keeps 7 days of all backups, 16 days of daily, 8 weeks of weekly, 4 months of monthly, 2 years of yearly).
 
-### 🔍 5. Advanced Global Search
-- **Keyboard Shortcut:** Instantly open the search modal using `Cmd + K` (Mac) or `Ctrl + K` (Windows).
-- Unified search across Cases, Clients, and Invoices with debounced API calls for optimal performance.
+### 🔔 5. Dynamic Notification System
+- Database-driven notifications for Hearings, Overdue Tasks, Paid Invoices, and System updates.
+- User-specific scoping (each user only sees their own notifications).
+- Endpoints for fetching, marking as read, and bulk marking as read.
 
-### 📄 6. Interactive Document & Template UI
-- **Auto-Fill Preview:** Side-by-side modal allowing users to select a Client/Case and instantly preview the filled legal document before copying.
-- **AI Summarizer UI:** Clean, structured display of AI-generated document summaries with loading states during processing.
+### ⚙️ 6. Global Dynamic Settings
+- Centralized settings management for System Name, Logo, Favicon, Social Media, SMTP, and OpenAI API Keys.
+- **Secure Public Endpoint:** Allows the Login page and Sidebar to fetch branding dynamically without authentication, while strictly hiding sensitive data (`$model->makeHidden()`).
 
-### 🌓 7. Seamless Dark/Light Mode
-- Persistent theme switching saved in `localStorage`.
-- Carefully tuned Tailwind CSS `dark:` variants for perfect contrast and readability in both modes.
+### 📊 7. Interconnectivity & Automation
+- **Hearing → Task:** Creating or updating a hearing automatically generates/updates a "Hearing Prep" task for the assigned lawyer.
+- **Time Entry → Invoice:** Billable time entries can be automatically aggregated and pushed into client invoices.
+
+### 🔐 8. Security & Role-Based Access Control (RBAC)
+- **Laravel Sanctum** for secure API token authentication.
+- Granular Role-Based Access Control (Super Admin, Lawyer, Staff, Client).
+- **Rate Limiting:** API routes protected against brute-force attacks (`throttle:60,1`).
+- **Client Portal:** Separate authentication scope for clients to view only their own cases, documents, and invoices.
 
 ---
 
@@ -42,31 +49,30 @@
 
 | Category | Technology / Package |
 |----------|----------------------|
-| **Framework** | Next.js 14+ (App Router) |
-| **Language** | TypeScript |
-| **Styling** | Tailwind CSS |
-| **State Management** | Zustand |
-| **API Client** | Axios (with interceptors for auth tokens) |
-| **Icons** | Lucide React |
-| **Animations** | Framer Motion |
-| **Notifications** | React Hot Toast |
-| **Date Formatting** | date-fns / native JS Date |
+| **Framework** | Laravel 12.x |
+| **Language** | PHP 8.2+ |
+| **Database** | SQLite (Local Dev) / MySQL (Production) |
+| **Authentication** | Laravel Sanctum |
+| **PDF Generation** | `barryvdh/laravel-dompdf` |
+| **AI Integration** | `openai-php/client` |
+| **Backups** | `spatie/laravel-backup` |
+| **Architecture** | Clean Architecture (Controller → Service → Form Request → Model) |
 
 ---
 
-## 📂 Architecture & Folder Structure
+## 📂 Architecture Pattern
 
-This frontend follows a clean, modular structure to ensure scalability and maintainability:
+This backend strictly follows the **Service Layer Pattern** to keep controllers thin and business logic reusable:
 
-```text
-src/
-├── app/                  # Next.js App Router (Pages, Layouts, Loading states)
-│   ├── (dashboard)/      # Protected routes (Cases, Tasks, Invoices, etc.)
-│   └── login/            # Public authentication route
-├── components/           # Reusable UI components
-│   ├── layout/           # Sidebar, Header, MainLayout
-│   └── ui/               # Skeletons, EmptyStates, Buttons, Inputs
-├── services/             # Axios API service functions (e.g., caseService, settingService)
-├── store/                # Zustand global state stores (authStore, settingStore)
-├── types/                # Centralized TypeScript interfaces and types
-└── lib/                  # Utility functions and Axios instance configuration
+1. **Form Requests** (`app/Http/Requests/`): Handles all input validation and authorization.
+2. **Controllers** (`app/Http/Controllers/Api/V1/`): Handles HTTP requests/responses and delegates logic.
+3. **Services** (`app/Services/`): Contains core business logic (e.g., `TaskService`, `DocumentTemplateService`, `NotificationService`).
+4. **Models** (`app/Models/`): Eloquent models with relationships, scopes, and accessors.
+
+---
+
+## ⚙️ Installation & Local Setup
+
+### 1. Install Dependencies
+```bash
+composer install
