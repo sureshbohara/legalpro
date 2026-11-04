@@ -26,10 +26,12 @@ class AuthController extends Controller
                 'message' => 'Your account is inactive. Please contact support.'
             ], 403); 
         }
-        $request->session()->regenerate();
+        // $request->session()->regenerate();
+        $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json([
             'success' => true,
             'message' => 'Login successful',
+            'token' => $token,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -64,8 +66,9 @@ class AuthController extends Controller
 
     public function logout(Request $request){
         Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        // $request->session()->invalidate();
+        // $request->session()->regenerateToken();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'success' => true,
